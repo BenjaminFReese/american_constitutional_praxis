@@ -10,7 +10,12 @@ doc %>%
 }
 
 ## Sentiment Analysis Function
-sent_anal <- function(doc) {
+sent_anal <- function(doc, state_name) {
+
+chart_title1 <- "Sentiment Analysis for"
+chart_title2 <- "Constitution"
+  
+title <- str_c(chart_title1, sep=" ", state_name, chart_title2)
   
 doc %>% 
   inner_join(get_sentiments("bing"), by = "word") %>% 
@@ -22,15 +27,15 @@ doc %>%
   ggplot(aes(word, n, fill = sentiment)) + 
   geom_col() + 
   labs(x = NULL, y = NULL, fill = "Sentiment",
-       title = "Sentiment Analysis") + 
+       title = title) + 
   coord_flip() + 
   theme_minimal() + 
   theme(legend.position = "bottom")
 
 }
 
-sent_anal(PA)
-
+sent_anal(VT, "VT")
+names(PA)
 ## Positive Words
 pos_words_cloud <- function(doc) {
   
