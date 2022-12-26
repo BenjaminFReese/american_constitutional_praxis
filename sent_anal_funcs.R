@@ -35,7 +35,7 @@ doc %>%
 }
 
 sent_anal(VT, "VT")
-names(PA)
+
 ## Positive Words
 pos_words_cloud <- function(doc) {
   
