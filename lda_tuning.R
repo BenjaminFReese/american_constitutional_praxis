@@ -8,3 +8,4 @@ results <- FindTopicsNumber(
   verbose = TRUE)
 
 FindTopicsNumber_plot(results)
+

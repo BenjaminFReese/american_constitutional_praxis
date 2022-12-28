@@ -61,7 +61,7 @@ top_gamma <- lda_gamma %>%
   ungroup() %>%
   arrange(desc(gamma))
 
-print(top_gamma, n=14)
+print(top_gamma, n=48)
 
 # calculate tf-idf
 tf_idf <- docs %>%
