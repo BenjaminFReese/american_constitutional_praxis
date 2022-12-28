@@ -1,0 +1,447 @@
+---
+title: "ACP Notes"
+author: "Benjamin Reese"
+format: html
+---
+
+## Packages
+
+```{r, warning=FALSE, message=FALSE}
+## List of Packages
+list.of.packages <- c("tidyverse", "tm", "dbscan", "proxy", "colorspace", "tidytext", "SnowballC",
+                      "igraph", "ggraph", "rvest", "wordcloud", "wordcloud2", "stringr", "RColorBrewer",
+                      "syuzhet", "FactoMineR", "tidymodels", "topicmodels", "patchwork", "ldatuning")
+## Loading Packages
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])] 
+
+if(length(new.packages)) {
+  install.packages(new.packages)
+}
+
+for (p in list.of.packages) {
+  require(p, character.only = TRUE)
+}
+
+```
+
+## Scraping Function
+
+```{r}
+## Scraping Function
+scrape_const <- function(url, doc){
+
+doc_html <- read_html(url)
+
+doc <- doc_html %>%
+  html_nodes("p") %>%
+  html_text()
+
+doc <- tibble(text = doc)
+
+doc <- doc %>% 
+  mutate(paragraph = row_number()) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>%
+  mutate(word = wordStem(word))
+
+}
+```
+
+## Scraping Documents
+
+```{r}
+## NH
+NH <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/nh09.asp", doc = "NH") %>%
+  select(-paragraph)
+
+## DE
+DE <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/de02.asp", doc = "DE")%>%
+  select(-paragraph)
+
+## PA
+PA <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/pa08.asp", doc = "PA")%>%
+  select(-paragraph)
+
+## SC
+SC <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/sc01.asp", doc = "SC")%>%
+  select(-paragraph)
+
+## NJ
+NJ <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/nj15.asp", doc = "NJ")%>%
+  select(-paragraph)
+
+## NC
+NC <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/nc07.asp", doc = "NC")%>%
+  select(-paragraph)
+
+## GA
+GA <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/ga02.asp", doc = "GA")%>%
+  select(-paragraph)
+
+## NY
+NY <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/ny01.asp", doc = "NY")%>%
+  select(-paragraph)
+
+## VT
+VT <- scrape_const(url = "https://avalon.law.yale.edu/18th_century/vt01.asp", doc = "VT")%>%
+  select(-paragraph)
+
+## VA
+va_html <- read_html("https://encyclopediavirginia.org/entries/the-constitution-of-virginia-1776/")
+
+VA <- va_html %>%
+  html_nodes("p") %>%
+  html_text()
+
+VA <- tibble(text = VA)
+
+VA <- VA %>% 
+  mutate(paragraph = row_number()) %>%
+  filter(paragraph != 1 & paragraph < 71) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>%
+  mutate(word=wordStem(word)) %>%
+  select(-paragraph)
+
+## RI Colonial Charter
+ri_html <- read_html("https://avalon.law.yale.edu/17th_century/ri04.asp")
+
+RI <- ri_html %>%
+  html_nodes("p") %>%
+  html_text()
+
+RI <- tibble(text = RI)
+
+RI <- RI %>% 
+  mutate(paragraph = row_number()) %>%
+  filter(paragraph < 10) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>%
+  mutate(word=wordStem(word)) %>%
+  select(-paragraph)
+
+
+## MD
+md_html <- read_html("http://www.nhinet.org/ccs/docs/md-1776.htm")
+
+MD <- md_html %>%
+  html_nodes("p") %>%
+  html_text()
+
+MD <- tibble(text = MD)
+
+MD <- MD %>% 
+  mutate(paragraph = row_number()) %>%
+  filter(paragraph != 1 & paragraph < 112) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>%
+  mutate(word=wordStem(word)) %>%
+  select(-paragraph)
+
+## MA
+ma_html <- read_html("http://www.nhinet.org/ccs/docs/ma-1780.htm")
+
+MA <- ma_html %>%
+  html_nodes("p") %>%
+  html_text()
+
+MA <- tibble(text = MA)
+
+MA <- MA %>% 
+  mutate(paragraph = row_number()) %>%
+  filter(paragraph != 1 & paragraph < 112) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>%
+  mutate(word=wordStem(word)) %>%
+  select(-paragraph)
+
+## CT Colonial Charter
+ct_html <- read_html("http://www.nhinet.org/ccs/docs/conn1662.htm")
+
+CT <- ct_html %>%
+  html_nodes("p") %>%
+  html_text()
+
+CT <- tibble(text = CT)
+
+CT <- CT %>% 
+  mutate(paragraph = row_number()) %>%
+  filter(paragraph != 1 & paragraph != 2 & paragraph != 3, paragraph < 14) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>%
+  mutate(word=wordStem(word)) %>%
+  select(-paragraph)
+
+## Albany Plan
+ap_html <- read_html("https://avalon.law.yale.edu/18th_century/albany.asp")
+
+AP <- ap_html %>%
+  html_nodes("p") %>%
+  html_text()
+
+AP <- tibble(text = AP)
+
+AP <- AP %>% 
+  mutate(paragraph = row_number()) %>%
+  filter(paragraph < 27 ) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>%
+  mutate(word = wordStem(word))
+  
+
+## Articles of Confederation
+AC <- scrape_const(url="https://avalon.law.yale.edu/18th_century/artconf.asp", doc = "AC") %>%
+  select(-paragraph)
+
+## US Constitution
+us_html <- read_html("http://www.nhinet.org/ccs/docs/constitution.htm")
+
+US <- us_html %>%
+  html_nodes("p") %>%
+  html_text()
+
+US <- tibble(text = US)
+
+US <- US %>% 
+  mutate(paragraph = row_number()) %>%
+  filter(paragraph != 1 & paragraph != 2 & paragraph < 98) %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>%
+  mutate(word=wordStem(word)) %>%
+  select(-paragraph)
+
+```
+
+## Sentiment Analysis Functions
+
+```{r}
+## Negative Words Function
+
+neg_words_cloud <- function(doc) {
+
+doc %>% 
+  inner_join(get_sentiments("bing"), by = "word") %>% 
+  filter(sentiment == "negative") %>% count(word) %>% 
+  wordcloud2(size = 0.7, fontFamily = "RobotoCondensed-Regular", 
+             color = rep(c("black", "grey"), length.out = nrow(.)))
+}
+
+## Sentiment Analysis Function
+sent_anal <- function(doc, name) {
+  
+doc %>% 
+  inner_join(get_sentiments("bing"), by = "word") %>% 
+  count(word, sentiment, sort = TRUE) %>% 
+  ungroup() %>% 
+  filter(n > 1) %>% 
+  mutate(n = ifelse(sentiment == "negative", -n, n)) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(word, n, fill = sentiment)) + 
+  geom_col() + 
+  labs(x = NULL, y = NULL, fill = "Sentiment",
+       title = name) + 
+  coord_flip() + 
+  theme_minimal() + 
+  theme(legend.position = "bottom")
+
+}
+
+
+## Positive Words
+pos_words_cloud <- function(doc) {
+  
+doc %>%
+    inner_join(get_sentiments("bing"), by = "word") %>% 
+    filter(sentiment == "positive") %>% 
+    count(word) %>% 
+    wordcloud2(size = 1,
+               color = rep(c("pink", "lightblue"), length.out = nrow(.)))
+
+}
+
+## NRC Sentiment Pot
+
+nrc_plot <- function(doc) {
+  
+  text <- doc$word
+  nrc <- get_nrc_sentiment(text)
+  
+  nrc <- data.frame(t(nrc))
+  
+  nrc <- data.frame(rowSums(nrc))
+  
+  names(nrc)[1] <- "count"
+  nrc <- cbind("sentiment" = rownames(nrc), nrc)
+  rownames(nrc) <- NULL
+  nrc <- nrc[1:8,]
+  
+  quickplot(sentiment, data=nrc, weight=count, geom="bar", fill=sentiment, ylab="count")+
+    ggtitle("Document Sentiments") +
+    theme_minimal()
+}
+
+words_cloud <- function(doc) {
+  
+  doc %>% 
+    count(word) %>% 
+    wordcloud2(size = 0.7, fontFamily = "RobotoCondensed-Regular")
+}
+
+```
+
+## Sentiment Analysis Plots
+```{r}
+## Sentiment Analysis Plots
+ct <- sent_anal(CT, "CT")
+
+de <- sent_anal(DE, "DE")
+
+ga <- sent_anal(GA, "GA")
+
+ma <- sent_anal(MA, "MA")
+
+md <- sent_anal(MD, "MD")
+
+nc <- sent_anal(NC, "NC")
+
+nj <- sent_anal(NJ, "NJ")
+
+ny <- sent_anal(NY, "NY")
+
+pa <- sent_anal(PA, "PA")
+
+ri <- sent_anal(RI, "RI")
+
+sc <- sent_anal(SC, "SC")
+
+us <- sent_anal(US, "US")
+
+va <- sent_anal(VA, "VA")
+
+vt <- sent_anal(VT, "VT")
+
+ct + de + ga + ma
+md + nc + nj + ny
+pa + ri + sc + us 
+va + vt
+```
+
+## Processing Text for LDA
+
+```{r}
+## Turning Each Document Into Single Text String
+
+NH <- paste(unlist(NH), collapse =" ")
+
+PA <- paste(unlist(PA), collapse =" ")
+
+DE <- paste(unlist(DE), collapse =" ")
+
+MA <- paste(unlist(MA), collapse =" ")
+
+VT <- paste(unlist(VT), collapse =" ")
+
+MD <- paste(unlist(MD), collapse =" ")
+
+NY <- paste(unlist(NY), collapse =" ")
+
+NJ <- paste(unlist(NJ), collapse =" ")
+
+GA <- paste(unlist(GA), collapse =" ")
+
+SC <- paste(unlist(SC), collapse =" ")
+
+NC <- paste(unlist(NC), collapse =" ")
+
+VA <- paste(unlist(VA), collapse =" ")
+
+AP <- paste(unlist(AP), collapse =" ")
+
+AC <- paste(unlist(AC), collapse =" ")
+
+US <- paste(unlist(US), collapse =" ")
+
+RI <- paste(unlist(RI), collapse =" ")
+
+CT <- paste(unlist(CT), collapse =" ")
+
+docs <- data.frame(NH, PA, DE, MA, VT, MD, NY, NJ, GA, SC, NC, VA, US, RI, CT)
+
+docs <- pivot_longer(docs, cols = colnames(docs), names_to = "doc") %>%
+  mutate(word = value) %>%
+  select(-value)
+
+docs <- docs %>%
+  unnest_tokens(word, word) %>%
+  filter(!str_detect(word, pattern = "^\\d")) %>%
+  anti_join(stop_words, by = "word")
+
+doc_dtm <- docs %>%
+  count(doc, word) %>%
+  cast_dtm(document = doc, term = word, value = n)
+
+```
+
+## tf-idf
+
+```{r}
+# calculate tf-idf
+tf_idf <- docs %>%
+  count(doc, word, sort = TRUE) %>%
+  bind_tf_idf(term = word, document = doc, n = n)
+
+
+# plot
+tf_idf %>%
+  group_by(doc) %>%
+  top_n(15, tf_idf) %>%
+  mutate(word = reorder(word, tf_idf)) %>%
+  ggplot(aes(tf_idf, word, fill = doc)) +
+  geom_col() +
+  facet_wrap(~doc, scales = "free") +
+  theme_minimal() +
+  guides(fill = "none")
+```
+
+
+
+## LDA Tuning
+
+```{r}
+results <- FindTopicsNumber(
+  doc_dtm,
+  topics = seq(from = 2, to = 12, by = 1),
+  metrics = c("CaoJuan2009", "Arun2010", "Deveaud2014"),
+  method = "Gibbs",
+  control = list(seed = 77),
+  mc.cores = 6L,
+  verbose = TRUE)
+
+FindTopicsNumber_plot(results)
+
+```
+
+
+## LDA
+
+```{r}
+## LDA
+
+doc_lda <- doc_dtm %>%
+  LDA(k = 4, control = list(seed = 20221217))
+
+lda_gamma <- tidy(doc_lda, matrix = "gamma")
+
+top_gamma <- lda_gamma %>%
+  group_by(topic) %>%
+  slice_max(gamma, n = 12) %>%
+  ungroup() %>%
+  arrange(desc(gamma))
+
+print(top_gamma, n=48)
+
+```
+
+
+
+
