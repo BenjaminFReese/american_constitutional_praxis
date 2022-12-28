@@ -2,6 +2,7 @@
 title: "ACP Notes"
 author: "Benjamin Reese"
 format: html
+self-contained: true
 ---
 
 ## Packages
@@ -290,6 +291,7 @@ words_cloud <- function(doc) {
 ```
 
 ## Sentiment Analysis Plots
+
 ```{r}
 ## Sentiment Analysis Plots
 ct <- sent_anal(CT, "CT")
@@ -382,6 +384,9 @@ doc_dtm <- docs %>%
 
 ```
 
+
+
+
 ## tf-idf
 
 ```{r}
@@ -407,7 +412,7 @@ tf_idf %>%
 
 ## LDA Tuning
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 results <- FindTopicsNumber(
   doc_dtm,
   topics = seq(from = 2, to = 12, by = 1),
